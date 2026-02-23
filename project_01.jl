@@ -25,7 +25,16 @@ Your team's goal is to
 
 """
 
-# ╔═╡ 0d9be664-d7c5-4084-add2-25e5418742d6
+# ╔═╡ 8f801942-4dfc-4b9e-8235-191278801b25
+print("test")
+
+# ╔═╡ 01f98192-da8b-4085-b964-6ca8f77ffb19
+begin
+		x = 5
+	print(x)
+end
+
+# ╔═╡ eae10d50-cc22-4e62-8114-7e1debbdb06e
 
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -37,15 +46,17 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.12.4"
+julia_version = "1.11.6"
 manifest_format = "2.0"
-project_hash = "71853c6197a6a7f222db0f1978c7cb232b87c5ee"
+project_hash = "da39a3ee5e6b4b0d3255bfef95601890afd80709"
 
 [deps]
 """
 
 # ╔═╡ Cell order:
 # ╟─f17103ea-06bf-11f1-a2b0-79e68ed152eb
-# ╠═0d9be664-d7c5-4084-add2-25e5418742d6
+# ╠═8f801942-4dfc-4b9e-8235-191278801b25
+# ╠═01f98192-da8b-4085-b964-6ca8f77ffb19
+# ╠═eae10d50-cc22-4e62-8114-7e1debbdb06e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
