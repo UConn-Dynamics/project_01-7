@@ -62,12 +62,12 @@ begin
 	theta_init=0.1 #rad
 	ang_vel_init=0.01 #rad/s
 	u0 =[theta_init,ang_vel_init]
-	time=(0,20)
+	time=(0,10)
 end
 
 # ╔═╡ d8a0cc97-2acb-4319-905e-52f523e30d78
 begin
-	slow_rotation= 0
+	slow_rotation= 3
 	fast_rotation= 10
 	slow_rotation_init=ODEProblem(rotating_pendulum, u0, time, slow_rotation)
 	fast_rotation_init=ODEProblem(rotating_pendulum, u0, time, fast_rotation)
@@ -77,6 +77,63 @@ end
 begin
 	solution_slow = solve(slow_rotation_init, RK4(), dt = 0.001)
 	solution_fast = solve(fast_rotation_init, RK4(), dt = 0.001)
+end
+
+# ╔═╡ 68b63f76-1718-48d1-963c-648cd439c824
+function get_3d_coords(sol, p_rotation)
+    ts = sol.t
+    thetas = [u[1] for u in sol.u]
+    
+    # Pendulum mass coordinates
+    # We use w1 as the horizontal arm length
+    xs = [-(w1 + pendulum_L * sin(thetas[i])) * sin(p_rotation * ts[i]) for i in 1:length(ts)]
+    ys = [(w1 + pendulum_L * sin(thetas[i])) * cos(p_rotation * ts[i]) for i in 1:length(ts)]
+    zs = [h1 - pendulum_L * cos(thetas[i]) for i in 1:length(ts)]
+    
+    return xs, ys, zs
+end
+
+# Get the paths
+
+# ╔═╡ 753e81cb-01fa-4ed4-8c62-68a902a6c7c6
+x_f, y_f, z_f = get_3d_coords(solution_fast, fast_rotation)
+
+# ╔═╡ 9388f1a7-9479-48b8-8231-9ebefa8dc778
+begin
+    gr() 
+    t_steps = range(time[1], time[2], length=300) 
+    anim = @animate for t in t_steps
+        state = solution_slow(t)
+        θ = state[1]
+        rotation= slow_rotation #change slow_rotation or fast_rotation here ############
+        
+        #calculating joint between w1 and L
+        xp = -w1 * sin(rotation*t)
+        yp =  w1 * cos(rotation*t)
+        zp =  h1
+        
+        #calculate masss coord
+        r_total = w1+pendulum_L*sin(θ)
+        xm= -r_total*sin(rotation*t)
+        ym= r_total *cos(rotation*t)
+        zm= h1 -pendulum_L*cos(θ)
+        
+        #plot
+        limit = w1 + pendulum_L + 0.1 #parameterize our x/y lims using params defined in problem statement
+        plot(xlims=(-limit, limit), ylims=(-limit, limit), zlims=(0, h1 + 0.1), camera=(45, 30),aspect_ratio=:equal, legend=false, title="Time: $(round(t, digits=2))s")
+        
+        #pole
+        plot!([0, 0], [0, 0], [0, h1], color=:black, lw=3)
+        #w
+        plot!([0, xp], [0, yp], [h1, zp], color=:green, lw=4)
+        #L
+        plot!([xp, xm], [yp, ym], [zp, zm], color=:red, lw=2)  
+        #end effector
+        scatter!([xm], [ym], [zm], color=:red, markersize=6)
+    end
+    
+    #saves to  C:\Users\*user*\.julia\pluto_notebooks\pendulum_animation.gif
+    gif(anim, "pendulum_animation.gif", fps=30)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2719,5 +2776,8 @@ version = "1.13.0+0"
 # ╠═d8e1f05c-c202-4870-b6f0-bcaf3d4db195
 # ╠═d8a0cc97-2acb-4319-905e-52f523e30d78
 # ╠═7b95c25b-f252-4947-b691-66c56c204bda
+# ╠═68b63f76-1718-48d1-963c-648cd439c824
+# ╠═753e81cb-01fa-4ed4-8c62-68a902a6c7c6
+# ╠═9388f1a7-9479-48b8-8231-9ebefa8dc778
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
