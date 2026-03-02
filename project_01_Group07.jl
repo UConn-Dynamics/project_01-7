@@ -165,7 +165,7 @@ $\frac{d}{dt}\!\left(\frac{\partial L}{\partial \dot{\theta}}\right)
 \frac{\partial \mathcal{D}}{\partial \dot{\theta}}
 = 0.$
 
-The additional term adds a viscous damping which removes kinetic energy over time
+The additional term adds a viscous damping which removes kinetic energy over time. **Results of an undamped and damped solution will be shown below**.
 """
 
 # ╔═╡ 242302eb-fe7e-4c20-83a2-f5a976fbbac9
@@ -212,7 +212,9 @@ begin
     u0 = [x1 => 0.5, x2 => 0.0]   # initial θ and θ_dot
     tspan = (0.0, 13.0) #time interval. I changed this to 0-13s (roughly 1 full rotation according to .gif- slow rotation) 
 
-    p_vals = Dict(L => 0.15, g => 9.8, Ω => 2.0, m => 0.1, w1 => 0.1, h1 => 0.2, c=>0.001)
+    p_vals = Dict(L => 0.15, g => 9.8, Ω => 2.0, m => 0.1, w1 => 0.1, h1 => 0.2, c=>0.00)
+
+	 p_vals_d = Dict(L => 0.15, g => 9.8, Ω => 2.0, m => 0.1, w1 => 0.1, h1 => 0.2, c=>0.001)
 
     p_slow = merge(p_vals, Dict(Ω => 0.5)) #CHANGE speed HERE
     p_fast = merge(p_vals, Dict(Ω => 2.5)) #CHANGE speed HERE
@@ -223,34 +225,20 @@ begin
     sol_slow = solve(prob_slow, RK4(); reltol=1e-6, abstol=1e-8, saveat=0.0333)
     sol_fast = solve(prob_fast, RK4(); reltol=1e-6, abstol=1e-8, saveat=0.0333)
 
+	p_slow_d = merge(p_vals_d, Dict(Ω => 0.5)) #CHANGE speed HERE
+    p_fast_d = merge(p_vals_d, Dict(Ω => 2.5)) #CHANGE speed HERE
+
+    prob_slow_d = ODEProblem(sys, merge(Dict(u0), p_slow_d), tspan)
+    prob_fast_d = ODEProblem(sys, merge(Dict(u0), p_fast_d), tspan)
+
+    sol_slow_d = solve(prob_slow_d, RK4(); reltol=1e-6, abstol=1e-8, saveat=0.0333)
+    sol_fast_d = solve(prob_fast_d, RK4(); reltol=1e-6, abstol=1e-8, saveat=0.0333)
 end; #added ; here to toggle output - JG
 
 # ╔═╡ 23a7d525-9815-4255-aed9-f8f6a867c5c9
 md"""
 ##### Plots and .gif setup
 """
-
-# ╔═╡ e1d508be-9dae-4ceb-bf42-9aeee1dee5ae
-begin # Need everything numerically for gif generation
-	θ_vals = sol_slow[x1]
-	t_vals = sol_slow.t
-	p_use = p_slow      
-	φ_vals = p_use[Ω] .* t_vals
-	
-	r_x = p_vals[L] .* sin.(θ_vals) .*  cos.(φ_vals)  .+ p_vals[w1] .* cos.(φ_vals)
-	r_y = p_vals[L] .*  sin.(θ_vals)  .* sin.(φ_vals) .+ p_vals[w1] .* sin.(φ_vals)
-	r_z = -p_vals[L] .* cos.(θ_vals) .+ p_vals[h1]
-
-	frame_top_x_values = p_vals[w1] .* cos.(φ_vals)
-	frame_top_y_values = p_vals[w1] .* sin.(φ_vals)
-	frame_top_z_values = fill(p_vals[h1], length(t_vals))
-	
-	θ_slow = sol_slow[x1]
-	t_slow = sol_slow.t
-	
-	θ_fast = sol_fast[x1]
-	t_fast = sol_fast.t
-end
 
 # ╔═╡ 05319cbe-64b8-439b-8c03-faa5341adda9
 function create_pendulum_animation(sol, p_vals, p_use, title_suffix)
@@ -304,7 +292,16 @@ begin
 	anim_slow = create_pendulum_animation(sol_slow, p_vals, p_slow, "Ω = $(p_slow[Ω]) rad/s")
 	
 	anim_fast = create_pendulum_animation(sol_fast, p_vals, p_fast, "Ω = $(p_fast[Ω]) rad/s")
+	
+	anim_slow_d = create_pendulum_animation(sol_slow_d, p_vals_d, p_slow, "Ω = $(p_slow[Ω]) rad/s")
+	
+	anim_fast_d = create_pendulum_animation(sol_fast_d, p_vals_d, p_fast, "Ω = $(p_fast[Ω]) rad/s")
 end
+
+# ╔═╡ 90dbaf65-47d9-4ab6-8fba-10e0124130f7
+md"""
+# Undamped Solution
+"""
 
 # ╔═╡ d7e26221-4d25-465c-96d7-d3c10261c13b
 md"""
@@ -313,7 +310,8 @@ Plots include angle and angular velocity as a function of time.
 """
 
 # ╔═╡ 2c56e9c4-3048-46e7-b851-bd2a78a0ed11
-gif(anim_slow, "visuals/pendulum_slow_damped.gif", fps=30)
+#gif(anim_slow, "visuals/pendulum_slow_undamped.gif", fps=30)
+gif(anim_slow, "pendulum_slow_undamped.gif", fps=30)
 
 # ╔═╡ f351a815-b9ea-4595-8f57-7cd7f02681cf
 md"""
@@ -322,7 +320,8 @@ Plots include angle and angular velocity as a function of time.
 """
 
 # ╔═╡ ccf3ef6f-0878-4608-b83e-2811fbc12f13
-gif(anim_fast, "visuals/pendulum_fast_damped.gif", fps=30)
+#gif(anim_fast, "visuals/pendulum_fast_undamped.gif", fps=30)
+gif(anim_fast, "pendulum_fast_undamped.gif", fps=30)
 
 # ╔═╡ cbcb8c25-86b0-43dd-9110-ac1dda6453d1
 md"""
@@ -337,9 +336,9 @@ md"""
 
 # ╔═╡ 627fa4ac-9539-4020-a994-74692669402f
 begin
-	plt1_fast= Plots.plot(sol_fast, idxs=[x1], xlabel="t", ylabel="θ (rad)", title="Angle vs. Time",legend = false,guidefontsize=12,tickfontsize=10)
-	plt2_fast= Plots.plot(sol_fast, idxs=[x2], xlabel="t", ylabel="θ/s (rad/sec)", title="Angular Velocity vs. Time",legend=false,guidefontsize=12,tickfontsize=10)
-	plot(plt1_fast, plt2_fast, layout=(2,1),size = (800,400),margin = 5Plots.mm)
+	plt1_slow= Plots.plot(sol_slow, idxs=[x1], xlabel="t", ylabel="θ (rad)", title="Angle vs. Time",legend=false,guidefontsize=12,tickfontsize=10)
+	plt2_slow= Plots.plot(sol_slow, idxs=[x2], xlabel="t", ylabel="θ/s (rad/sec)", title="Angular Velocity vs. Time",legend=false,guidefontsize=12,tickfontsize=10)
+	plot(plt1_slow, plt2_slow, layout=(2,1),size = (800,400),margin = 5Plots.mm)
 end
 
 # ╔═╡ cc7be0d9-2db0-42ad-857d-1cc304ae58cd
@@ -349,9 +348,64 @@ md"""
 
 # ╔═╡ d8ed26fa-e3f1-4766-b858-40bc8fec1317
 begin
-	plt1_slow= Plots.plot(sol_slow, idxs=[x1], xlabel="t", ylabel="θ (rad)", title="Angle vs. Time",legend=false,guidefontsize=12,tickfontsize=10)
-	plt2_slow= Plots.plot(sol_slow, idxs=[x2], xlabel="t", ylabel="θ/s (rad/sec)", title="Angular Velocity vs. Time",legend=false,guidefontsize=12,tickfontsize=10)
-	plot(plt1_slow, plt2_slow, layout=(2,1),size = (800,400),margin = 5Plots.mm)
+	plt1_fast= Plots.plot(sol_fast, idxs=[x1], xlabel="t", ylabel="θ (rad)", title="Angle vs. Time",legend = false,guidefontsize=12,tickfontsize=10)
+	plt2_fast= Plots.plot(sol_fast, idxs=[x2], xlabel="t", ylabel="θ/s (rad/sec)", title="Angular Velocity vs. Time",legend=false,guidefontsize=12,tickfontsize=10)
+	plot(plt1_fast, plt2_fast, layout=(2,1),size = (800,400),margin = 5Plots.mm)
+end
+
+# ╔═╡ 7abcb697-2e1c-4262-8d92-3bbc677b8f3f
+md"""
+# Damped Solution
+"""
+
+# ╔═╡ 4dfde1fb-fd6a-4b9b-8e93-5ae683c7af14
+md"""
+##### Plotting & .gif Generation - "Slow" Solution
+Plots include angle and angular velocity as a function of time.
+"""
+
+# ╔═╡ 0313b7e7-1d78-4ce1-a9b0-cefcfd755b31
+#gif(anim_slow, "visuals/pendulum_slow_damped.gif", fps=30)
+gif(anim_slow_d, "pendulum_slow_damped.gif", fps=30)
+
+# ╔═╡ 65dd4ea8-f5e3-4332-a818-0476dc32e2a5
+md"""
+##### Plotting & .gif Generation - "Fast" Solution
+Plots include angle and angular velocity as a function of time.
+"""
+
+# ╔═╡ aff064d4-8da1-45ec-82aa-920bc4d48312
+#gif(anim_fast, "visuals/pendulum_fast_damped.gif", fps=30)
+gif(anim_fast_d, "pendulum_fast_damped.gif", fps=30)
+
+# ╔═╡ 645d9b6a-9100-47e4-bfe7-d13901ba0c17
+md"""
+#### Static Plots:
+Added static versions of angle & angular velocity vs. time for clarity
+"""
+
+# ╔═╡ 0171604d-c9bf-4a95-9016-6f6e30116a9f
+md"""
+##### "Slow" Solution:
+"""
+
+# ╔═╡ 6801e778-1160-44fb-8f35-16df47d3de6e
+begin
+	plt1_slow_d= Plots.plot(sol_slow_d, idxs=[x1], xlabel="t", ylabel="θ (rad)", title="Angle vs. Time",legend=false,guidefontsize=12,tickfontsize=10)
+	plt2_slow_d= Plots.plot(sol_slow_d, idxs=[x2], xlabel="t", ylabel="θ/s (rad/sec)", title="Angular Velocity vs. Time",legend=false,guidefontsize=12,tickfontsize=10)
+	plot(plt1_slow_d, plt2_slow_d, layout=(2,1),size = (800,400),margin = 5Plots.mm)
+end
+
+# ╔═╡ 909fadff-47ca-46dd-b905-330bc9014837
+md"""
+##### "Fast" Solution:
+"""
+
+# ╔═╡ a28a7786-9c4d-4a27-8d7c-1ea1cecc89c4
+begin
+	plt1_fast_d= Plots.plot(sol_fast_d, idxs=[x1], xlabel="t", ylabel="θ (rad)", title="Angle vs. Time",legend = false,guidefontsize=12,tickfontsize=10)
+	plt2_fast_d= Plots.plot(sol_fast_d, idxs=[x2], xlabel="t", ylabel="θ/s (rad/sec)", title="Angular Velocity vs. Time",legend=false,guidefontsize=12,tickfontsize=10)
+	plot(plt1_fast_d, plt2_fast_d, layout=(2,1),size = (800,400),margin = 5Plots.mm)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -375,9 +429,9 @@ Symbolics = "~7.8.0"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.12.4"
+julia_version = "1.11.6"
 manifest_format = "2.0"
-project_hash = "519c4d981c804d986924ec2e52cddd4be394ac21"
+project_hash = "3f553cfc764a6987dc94d5beca39e66ebb80e3f6"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "f7304359109c768cf32dc5fa2d371565bb63b68a"
@@ -731,7 +785,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.3.0+1"
+version = "1.1.1+0"
 
 [[deps.CompositeTypes]]
 git-tree-sha1 = "bce26c3dab336582805503bed209faab1c279768"
@@ -992,7 +1046,7 @@ version = "0.7.16"
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
-version = "1.7.0"
+version = "1.6.0"
 
 [[deps.DynamicPolynomials]]
 deps = ["Future", "LinearAlgebra", "MultivariatePolynomials", "MutableArithmetics", "Reexport", "Test"]
@@ -1440,11 +1494,6 @@ git-tree-sha1 = "b6893345fd6658c8e475d40155789f4860ac3b21"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "3.1.4+0"
 
-[[deps.JuliaSyntaxHighlighting]]
-deps = ["StyledStrings"]
-uuid = "ac6e5ff7-fb65-4e79-a425-ec3bc9c03011"
-version = "1.12.0"
-
 [[deps.JumpProcesses]]
 deps = ["ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqCallbacks", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "PoissonRandom", "Random", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "SymbolicIndexingInterface"]
 git-tree-sha1 = "3dee0073e2512598de97a98f5f30126cd7bdd9a7"
@@ -1559,24 +1608,24 @@ uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
 version = "0.6.4"
 
 [[deps.LibCURL_jll]]
-deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll", "Zlib_jll", "nghttp2_jll"]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "8.15.0+0"
+version = "8.6.0+0"
 
 [[deps.LibGit2]]
-deps = ["LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
+deps = ["Base64", "LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 version = "1.11.0"
 
 [[deps.LibGit2_jll]]
-deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll"]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll"]
 uuid = "e37daf67-58a4-590a-8e99-b0245dd2ffc5"
-version = "1.9.0+0"
+version = "1.7.2+0"
 
 [[deps.LibSSH2_jll]]
-deps = ["Artifacts", "Libdl", "OpenSSL_jll"]
+deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
 uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
-version = "1.11.3+1"
+version = "1.11.0+1"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -1637,7 +1686,7 @@ version = "7.6.0"
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-version = "1.12.0"
+version = "1.11.0"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterface", "ChainRulesCore", "ConcreteStructs", "DocStringExtensions", "EnumX", "GPUArraysCore", "InteractiveUtils", "Krylov", "Libdl", "LinearAlgebra", "MKL_jll", "Markdown", "OpenBLAS_jll", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLLogging", "SciMLOperators", "Setfield", "StaticArraysCore"]
@@ -1739,7 +1788,7 @@ uuid = "d125e4d3-2237-4719-b19c-fa641b8a4667"
 version = "0.1.8"
 
 [[deps.Markdown]]
-deps = ["Base64", "JuliaSyntaxHighlighting", "StyledStrings"]
+deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 version = "1.11.0"
 
@@ -1770,8 +1819,7 @@ uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
 version = "1.1.10"
 
 [[deps.MbedTLS_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "926c6af3a037c68d02596a44c22ec3595f5f760b"
+deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.6+0"
 
@@ -1852,7 +1900,7 @@ version = "0.3.7"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2025.11.4"
+version = "2023.12.12"
 
 [[deps.MuladdMacro]]
 git-tree-sha1 = "cac9cc5499c25554cba55cd3c30543cff5ca4fab"
@@ -1889,7 +1937,7 @@ version = "1.1.3"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
-version = "1.3.0"
+version = "1.2.0"
 
 [[deps.NonlinearSolve]]
 deps = ["ADTypes", "ArrayInterface", "BracketingNonlinearSolve", "CommonSolve", "ConcreteStructs", "DifferentiationInterface", "FastClosures", "FiniteDiff", "ForwardDiff", "LineSearch", "LinearAlgebra", "LinearSolve", "NonlinearSolveBase", "NonlinearSolveFirstOrder", "NonlinearSolveQuasiNewton", "NonlinearSolveSpectralMethods", "PrecompileTools", "Preferences", "Reexport", "SciMLBase", "SciMLLogging", "SimpleNonlinearSolve", "StaticArraysCore", "SymbolicIndexingInterface"]
@@ -2006,12 +2054,12 @@ version = "0.3.30+0"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.29+0"
+version = "0.3.27+1"
 
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.7+0"
+version = "0.8.5+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "NetworkOptions", "OpenSSL_jll", "Sockets"]
@@ -2020,7 +2068,8 @@ uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
 version = "1.6.1"
 
 [[deps.OpenSSL_jll]]
-deps = ["Artifacts", "Libdl"]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "f19301ae653233bc88b1810ae908194f07f8db9d"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
 version = "3.5.4+0"
 
@@ -2268,7 +2317,7 @@ version = "1.11.0"
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.44.0+1"
+version = "10.42.0+1"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
@@ -2301,7 +2350,7 @@ version = "0.44.2+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.12.1"
+version = "1.11.0"
 weakdeps = ["REPL"]
 
     [deps.Pkg.extensions]
@@ -2448,7 +2497,7 @@ weakdeps = ["Distributions"]
     QuasiMonteCarloDistributionsExt = "Distributions"
 
 [[deps.REPL]]
-deps = ["InteractiveUtils", "JuliaSyntaxHighlighting", "Markdown", "Sockets", "StyledStrings", "Unicode"]
+deps = ["InteractiveUtils", "Markdown", "Sockets", "StyledStrings", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 version = "1.11.0"
 
@@ -2727,7 +2776,7 @@ version = "1.2.2"
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-version = "1.12.0"
+version = "1.11.0"
 
 [[deps.SparseConnectivityTracer]]
 deps = ["ADTypes", "DocStringExtensions", "FillArrays", "LinearAlgebra", "Random", "SparseArrays"]
@@ -2911,7 +2960,7 @@ version = "7.12.1+0"
 [[deps.SuiteSparse_jll]]
 deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "7.8.3+2"
+version = "7.7.0+0"
 
 [[deps.Sundials]]
 deps = ["Accessors", "ArrayInterface", "CEnum", "DataStructures", "DiffEqBase", "Libdl", "LinearAlgebra", "LinearSolve", "Logging", "NonlinearSolveBase", "PrecompileTools", "Reexport", "SciMLBase", "SparseArrays", "Sundials_jll", "SymbolicIndexingInterface"]
@@ -3246,7 +3295,7 @@ version = "1.6.0+0"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.3.1+2"
+version = "1.2.13+1"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -3281,7 +3330,7 @@ version = "0.17.4+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.15.0+0"
+version = "5.11.0+0"
 
 [[deps.libdecor_jll]]
 deps = ["Artifacts", "Dbus_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pango_jll", "Wayland_jll", "xkbcommon_jll"]
@@ -3328,7 +3377,7 @@ version = "1.1.7+0"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.64.0+1"
+version = "1.59.0+0"
 
 [[deps.oneTBB_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
@@ -3337,9 +3386,9 @@ uuid = "1317d2d5-d96f-522e-a858-c73665f53c3e"
 version = "2022.0.0+1"
 
 [[deps.p7zip_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+deps = ["Artifacts", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.7.0+0"
+version = "17.4.0+2"
 
 [[deps.x264_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -3383,9 +3432,9 @@ version = "1.13.0+0"
 # ╠═28406b28-a701-4b46-8620-5df4a5dc70ae
 # ╠═8776d0cc-f9fb-43ee-babe-b77ec4f189ce
 # ╟─23a7d525-9815-4255-aed9-f8f6a867c5c9
-# ╠═e1d508be-9dae-4ceb-bf42-9aeee1dee5ae
 # ╠═05319cbe-64b8-439b-8c03-faa5341adda9
 # ╠═1de86af2-adda-444a-a1fe-1201872daa6d
+# ╟─90dbaf65-47d9-4ab6-8fba-10e0124130f7
 # ╟─d7e26221-4d25-465c-96d7-d3c10261c13b
 # ╠═2c56e9c4-3048-46e7-b851-bd2a78a0ed11
 # ╟─f351a815-b9ea-4595-8f57-7cd7f02681cf
@@ -3395,5 +3444,15 @@ version = "1.13.0+0"
 # ╠═627fa4ac-9539-4020-a994-74692669402f
 # ╟─cc7be0d9-2db0-42ad-857d-1cc304ae58cd
 # ╠═d8ed26fa-e3f1-4766-b858-40bc8fec1317
+# ╟─7abcb697-2e1c-4262-8d92-3bbc677b8f3f
+# ╟─4dfde1fb-fd6a-4b9b-8e93-5ae683c7af14
+# ╠═0313b7e7-1d78-4ce1-a9b0-cefcfd755b31
+# ╟─65dd4ea8-f5e3-4332-a818-0476dc32e2a5
+# ╠═aff064d4-8da1-45ec-82aa-920bc4d48312
+# ╟─645d9b6a-9100-47e4-bfe7-d13901ba0c17
+# ╟─0171604d-c9bf-4a95-9016-6f6e30116a9f
+# ╠═6801e778-1160-44fb-8f35-16df47d3de6e
+# ╟─909fadff-47ca-46dd-b905-330bc9014837
+# ╠═a28a7786-9c4d-4a27-8d7c-1ea1cecc89c4
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
